@@ -9,8 +9,7 @@ Git ──► Jenkins ──► Docker ──► Kubernetes ──► Prometheus
 DevOps Pulse is a React + FastAPI application that is *built* by Jenkins, *shipped* as a Docker image,
 *deployed and scaled* on Kubernetes (Minikube), and *observed* by Prometheus and Grafana. The dashboard
 itself reads live data back from every stage — the Git commit and Jenkins build number baked into the
-image, the Pods and replicas from the Kubernetes API, and cluster-wide metrics from Prometheus — so the
-output of each stage is visibly the input of the next.
+image, the Pods and replicas from the Kubernetes API, and cluster-wide metrics from Prometheus —
 
 ---
 
