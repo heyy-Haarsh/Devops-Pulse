@@ -1,0 +1,11 @@
+# Grafana loads every dashboard JSON file found in /var/lib/grafana/dashboards
+apiVersion: 1
+providers:
+  - name: devops-pulse
+    folder: DevOps Pulse
+    type: file
+    disableDeletion: true
+    allowUiUpdates: true
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards

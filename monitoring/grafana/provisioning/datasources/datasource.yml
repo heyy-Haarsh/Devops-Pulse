@@ -1,0 +1,14 @@
+# Grafana loads this at startup: Prometheus becomes the default datasource.
+# "prometheus" resolves to the Prometheus Service in Kubernetes (same namespace)
+# and to the prometheus container in docker-compose.
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 15s

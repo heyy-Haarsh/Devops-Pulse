@@ -1,0 +1,18 @@
+# Non-secret runtime configuration, injected into the Pods as environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devops-pulse-config
+  namespace: devops-pulse
+  labels:
+    app: devops-pulse
+data:
+  ENVIRONMENT: "minikube"
+  CORS_ORIGINS: "*"
+  # In-cluster DNS names of the monitoring stack (see monitoring/)
+  PROMETHEUS_URL: "http://prometheus.monitoring.svc.cluster.local:9090"
+  GRAFANA_URL: "http://grafana.monitoring.svc.cluster.local:3000"
+  PROMETHEUS_JOB: "devops-pulse"
+  # Links shown in the dashboard (reachable from your browser via kubectl port-forward)
+  PROMETHEUS_PUBLIC_URL: "http://localhost:9090"
+  GRAFANA_PUBLIC_URL: "http://localhost:3001"

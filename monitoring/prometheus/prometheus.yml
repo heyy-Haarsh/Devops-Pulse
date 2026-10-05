@@ -1,0 +1,55 @@
+# ============================================================================
+# Prometheus configuration — Kubernetes (Minikube)
+#
+# Prometheus PULLS metrics: every 15 s it calls GET /metrics on each target.
+# Targets are discovered automatically from the Kubernetes API, so when the
+# Deployment is scaled from 2 -> 3 replicas a third target appears by itself.
+# ============================================================================
+global:
+  scrape_interval: 15s       # how often to scrape targets
+  evaluation_interval: 15s   # how often to evaluate alert rules
+  external_labels:
+    cluster: minikube
+
+rule_files:
+  - /etc/prometheus/alert-rules.yml
+
+scrape_configs:
+  # Prometheus monitors itself
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # DevOps Pulse application Pods
+  - job_name: devops-pulse
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [devops-pulse]
+    relabel_configs:
+      # Only scrape Pods annotated with prometheus.io/scrape: "true"
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: "true"
+      # Ignore Pods that are not running yet / anymore
+      - source_labels: [__meta_kubernetes_pod_phase]
+        action: drop
+        regex: Pending|Succeeded|Failed
+      # Metrics path from prometheus.io/path (default /metrics)
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      # Port from prometheus.io/port -> <podIP>:<port>
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      # Friendly labels used in PromQL / Grafana
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        target_label: app

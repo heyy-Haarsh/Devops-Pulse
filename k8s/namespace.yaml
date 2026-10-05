@@ -1,0 +1,7 @@
+# Dedicated namespace keeps all DevOps Pulse resources grouped together
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devops-pulse
+  labels:
+    app.kubernetes.io/part-of: devops-pulse

@@ -1,0 +1,37 @@
+# Jenkins Configuration-as-Code: no setup wizard, one admin user, one pipeline job.
+jenkins:
+  systemMessage: "DevOps Pulse CI/CD — Git → Jenkins → Docker → Kubernetes → Prometheus → Grafana"
+  numExecutors: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          password: "${JENKINS_ADMIN_PASSWORD:-admin}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+unclassified:
+  location:
+    url: "${JENKINS_URL:-http://localhost:8082/}"
+
+# "Pipeline script from SCM": Jenkins clones REPO_URL and runs its Jenkinsfile.
+# The Jenkinsfile's pollSCM trigger becomes active after the first build.
+jobs:
+  - script: >
+      pipelineJob('devops-pulse') {
+        description('Build, test and deploy DevOps Pulse to Minikube (see Jenkinsfile)')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('${REPO_URL:-https://github.com/CHANGE-ME/devops-pulse.git}') }
+                branch('*/${REPO_BRANCH:-main}')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(true)
+          }
+        }
+      }

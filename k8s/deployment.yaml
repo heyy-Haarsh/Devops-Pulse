@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-pulse
+  namespace: devops-pulse
+  labels:
+    app: devops-pulse
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: devops-pulse
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # start one new Pod at a time
+      maxUnavailable: 0  # never drop below the desired replica count
+  template:
+    metadata:
+      labels:
+        app: devops-pulse
+      annotations:
+        # Prometheus discovers Pods with these annotations (monitoring/prometheus/prometheus.yml)
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: devops-pulse
+      containers:
+        - name: devops-pulse
+          # Jenkins replaces this tag with the build number: kubectl set image ... devops-pulse:<BUILD_NUMBER>
+          image: devops-pulse:1.0.0
+          # The image is built inside Minikube's Docker daemon, so never pull from a registry
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: devops-pulse-config
+          env:
+            # Downward API: lets each Pod report its own identity on the dashboard
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          readinessProbe:      # receive Service traffic only when /health answers
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:       # restart the container if /health stops answering
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          lifecycle:
+            preStop:           # keep serving while the Service stops routing to this Pod (zero-downtime rollouts)
+              exec:
+                command: ["sleep", "5"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi

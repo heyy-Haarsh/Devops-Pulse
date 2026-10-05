@@ -1,0 +1,20 @@
+# Prometheus configuration for docker-compose (local, without Kubernetes).
+# Same job name as the Kubernetes config so all PromQL/Grafana panels still work.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alert-rules.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: devops-pulse
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["app:8000"]
+        labels:
+          pod: devops-pulse-compose

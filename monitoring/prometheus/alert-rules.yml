@@ -1,0 +1,32 @@
+# Alert rules — visible in Prometheus under Alerts, and on the DevOps Pulse dashboard.
+# Thresholds match frontend/src/anomalies.ts
+groups:
+  - name: devops-pulse
+    rules:
+      - alert: DevOpsPulseTargetDown
+        expr: up{job="devops-pulse"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod {{ $labels.pod }} is not answering Prometheus scrapes"
+
+      - alert: DevOpsPulseHighErrorRate
+        expr: |
+          100 * sum(rate(http_errors_total{job="devops-pulse"}[1m]))
+            / sum(rate(http_requests_total{job="devops-pulse"}[1m])) > 5
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error rate is {{ $value | printf \"%.1f\" }}% (threshold 5%)"
+
+      - alert: DevOpsPulseHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(http_request_duration_seconds_bucket{job="devops-pulse"}[1m]))) > 0.5
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 latency is {{ $value | printf \"%.2f\" }}s (threshold 0.5s)"

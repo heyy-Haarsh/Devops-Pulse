@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+backend/static/
+backend/test-results/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/coverage/
+
+# Secrets / local config
+.env
+.env.*
+*.kubeconfig
+jenkins/secrets/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

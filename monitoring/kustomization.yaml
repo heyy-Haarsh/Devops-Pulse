@@ -1,0 +1,36 @@
+# Deploy the whole monitoring stack with:   kubectl apply -k monitoring/
+#
+# Kustomize turns the plain config files (prometheus.yml, alert rules, Grafana
+# provisioning + dashboard JSON) into ConfigMaps, so there is a single source
+# of truth for each file. A content hash is appended to each ConfigMap name, so
+# editing a file and re-applying automatically restarts the affected Pod.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+
+resources:
+  - namespace.yaml
+  - prometheus/prometheus-k8s.yaml
+  - grafana/grafana-k8s.yaml
+
+configMapGenerator:
+  - name: prometheus-config
+    files:
+      - prometheus/prometheus.yml
+      - prometheus/alert-rules.yml
+  - name: grafana-datasources
+    files:
+      - grafana/provisioning/datasources/datasource.yml
+  - name: grafana-dashboard-provider
+    files:
+      - grafana/provisioning/dashboards/dashboards.yml
+  - name: grafana-dashboards
+    files:
+      - grafana/dashboards/devops-pulse.json
+
+# Demo credentials for the Grafana admin user (anonymous users get read-only access)
+secretGenerator:
+  - name: grafana-admin
+    literals:
+      - username=admin
+      - password=devops-pulse

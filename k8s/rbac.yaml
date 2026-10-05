@@ -1,0 +1,37 @@
+# Read-only access so the dashboard can show its own Deployment, Pods,
+# Service and Events (what `kubectl get` would show) — nothing can be modified.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: devops-pulse
+  namespace: devops-pulse
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: devops-pulse-reader
+  namespace: devops-pulse
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "events"]
+    verbs: ["get", "list"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: devops-pulse-reader
+  namespace: devops-pulse
+subjects:
+  - kind: ServiceAccount
+    name: devops-pulse
+    namespace: devops-pulse
+roleRef:
+  kind: Role
+  name: devops-pulse-reader
+  apiGroup: rbac.authorization.k8s.io

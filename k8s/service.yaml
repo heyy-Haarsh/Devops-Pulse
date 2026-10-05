@@ -1,0 +1,17 @@
+# Load-balances traffic across all ready devops-pulse Pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-pulse-service
+  namespace: devops-pulse
+  labels:
+    app: devops-pulse
+spec:
+  type: NodePort
+  selector:
+    app: devops-pulse
+  ports:
+    - name: http
+      port: 80          # Service port inside the cluster
+      targetPort: http  # containerPort 8000 on the Pods
+      nodePort: 30080   # reachable via `minikube service devops-pulse-service -n devops-pulse`
