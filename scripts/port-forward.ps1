@@ -13,6 +13,10 @@ param(
     [int]$GrafanaPort = 3001
 )
 
+. "$PSScriptRoot\_common.ps1"
+$kubectlPath = Get-KubectlPath
+if (-not $kubectlPath) { Write-Host "kubectl not found - using 'minikube kubectl --'" -ForegroundColor Yellow }
+
 $forwards = @(
     @{ ns = "devops-pulse"; svc = "svc/devops-pulse-service"; map = "${AppPort}:80" },
     @{ ns = "monitoring";   svc = "svc/prometheus";           map = "${PrometheusPort}:9090" },
@@ -21,13 +25,17 @@ $forwards = @(
 
 $jobs = foreach ($f in $forwards) {
     Start-Job -ScriptBlock {
-        param($ns, $svc, $map)
+        param($ns, $svc, $map, $kubectlPath)
         # Restart the forward if the target Pod is replaced (e.g. after a rollout)
         while ($true) {
-            kubectl -n $ns port-forward --address 127.0.0.1 $svc $map 2>&1
+            if ($kubectlPath) {
+                & $kubectlPath -n $ns port-forward --address 127.0.0.1 $svc $map 2>&1
+            } else {
+                & minikube kubectl -- -n $ns port-forward --address 127.0.0.1 $svc $map 2>&1
+            }
             Start-Sleep 2
         }
-    } -ArgumentList $f.ns, $f.svc, $f.map
+    } -ArgumentList $f.ns, $f.svc, $f.map, $kubectlPath
 }
 
 Write-Host "DevOps Pulse  -> http://localhost:$AppPort" -ForegroundColor Green

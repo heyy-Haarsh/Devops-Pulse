@@ -26,6 +26,13 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $secrets = Join-Path $PSScriptRoot "secrets"
 $container = "devops-pulse-jenkins"
+. (Join-Path $root "scripts\_common.ps1")
+$kubectlPath = Get-KubectlPath
+if ($kubectlPath) {
+    function kubectl { & $kubectlPath @args }
+} else {
+    function kubectl { & minikube kubectl -- @args }
+}
 
 # Make sure the docker CLI talks to Docker Desktop, not to Minikube's daemon
 Remove-Item Env:DOCKER_HOST, Env:DOCKER_TLS_VERIFY, Env:DOCKER_CERT_PATH, Env:MINIKUBE_ACTIVE_DOCKERD -ErrorAction SilentlyContinue
@@ -51,8 +58,11 @@ if ($LASTEXITCODE -ne 0) { throw "Jenkins image build failed" }
 
 Write-Host "==> (Re)starting Jenkins container" -ForegroundColor Cyan
 docker rm -f $container 2>$null | Out-Null
+# Fixed IP: otherwise, after a Docker Desktop restart, Jenkins can come up first and take
+# Minikube's address (.2), and "minikube start" then fails with "Address already in use".
+$jenkinsIp = $ip -replace '\.\d+$', '.10'
 docker run -d --name $container --restart unless-stopped `
-    --network minikube `
+    --network minikube --ip $jenkinsIp `
     -p "${Port}:8080" `
     -v devops-pulse-jenkins-home:/var/jenkins_home `
     --mount "type=bind,source=$secrets,target=/var/jenkins_secrets,readonly" `
