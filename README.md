@@ -1,6 +1,6 @@
 # DevOps Pulse
 
-**A DevOps monitoring and control dashboard that demonstrates a complete, integrated delivery pipeline:**
+**A DevOps monitoring and controls dashboard that demonstrates a complete, integrated delivery pipeline:**
 
 ```
 Git ──► Jenkins ──► Docker ──► Kubernetes ──► Prometheus ──► Grafana
