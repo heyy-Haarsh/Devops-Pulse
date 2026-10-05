@@ -1,5 +1,6 @@
 # DevOps Pulse
 
+** Improvement in dashboard **
 **A DevOps monitoring and controls dashboard that demonstrates a complete, integrated delivery pipeline:**
 
 ```
