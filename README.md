@@ -1,6 +1,7 @@
 # DevOps Pulse
 
 ** Improvement in dashboard **
+** Version 2 
 **A DevOps monitoring and controls dashboard that demonstrates a complete, integrated delivery pipeline:**
 
 ```
@@ -482,3 +483,5 @@ docker logs -f devops-pulse-jenkins
    latency, error rate.
 8. **Anomaly** — Traffic Generator → *Error burst*: Grafana error panels spike red, Prometheus alert fires,
    dashboard header turns Unhealthy. It recovers on its own after about a minute.
+
+sdfrifrefnerljvlermvoerv;
